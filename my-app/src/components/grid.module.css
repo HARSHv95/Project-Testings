@@ -1,0 +1,8 @@
+.PlayerBlock{
+    border: 2px solid;
+    padding: 12px;
+    border-block-color: white;
+    border-color: #00b4ff;
+    text-shadow: 0 0 5px #00ffcc, 0 0 10px #00ffcc;
+    box-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+}
