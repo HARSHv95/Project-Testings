@@ -1,20 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { io
+import { io} from "socket.io-client";
 
 
-
-
- } from "socket.io-client";
-
-
-export default function DotGrid() {
+export default function DotGrid({RoomUsers, main, setMain}) {
   const canvasRef = useRef(null);
   const [dots, setDots] = useState([]);
   const [lines, setLines] = useState([]);
   const [selectedDot, setSelectedDot] = useState(null);
+  const [Turn , setTurn] = useState(false);
 
-  const gridSize = 5; // Number of dots per row/column
-  const dotSpacing = 100; // Space between dots
+  const gridSize = 5;
+  const dotSpacing = 100; 
   const SquareMap = Array(gridSize).fill(null).map(()=>Array(gridSize).fill(0));
 
   useEffect(() => {
@@ -28,6 +24,11 @@ export default function DotGrid() {
     drawGrid(newDots, []);
   }, []);
 
+  useEffect(()=>{
+    checkForSquare();
+    io.emit("turn", RoomUsers, !Turn)
+},[lines] );
+
   const checkForSquare = () => {
     for (let i = 0; i < dots.length; i++) {
       for (let j = 0; j < dots.length; j++) {
@@ -36,14 +37,12 @@ export default function DotGrid() {
         const dotA = dots[i];
         const dotB = dots[j];
   
-        // Check if they form a horizontal or vertical line of length 100
+        
         if (Math.abs(dotA.x - dotB.x) === 100 && dotA.y === dotB.y) {
-          // Find the two other dots that would complete the square
           const dotC = dots.find((d) => d.x === dotA.x && d.y === dotA.y + 100);
           const dotD = dots.find((d) => d.x === dotB.x && d.y === dotB.y + 100);
   
           if (dotC && dotD) {
-            // Check if all 4 sides exist in the lines array
             const hasAllSides = [
               { start: dotA, end: dotB },
               { start: dotA, end: dotC },
@@ -57,10 +56,8 @@ export default function DotGrid() {
             );
   
             if (hasAllSides) {
-              hasAllSides.every(({start, end})=> {
-                const row = start
-              })
               console.log("🎉 Square Detected!");
+              setTurn(true);
             }
           }
         }
@@ -74,7 +71,6 @@ export default function DotGrid() {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw dots
     dots.forEach((dot) => {
       ctx.beginPath();
       ctx.arc(dot.x, dot.y, 5, 0, Math.PI * 2);
@@ -82,7 +78,6 @@ export default function DotGrid() {
       ctx.fill();
     });
 
-    // Draw lines
     lines.forEach(({ start, end }) => {
         ctx.beginPath();
         ctx.moveTo(start.x, start.y);
