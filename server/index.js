@@ -54,6 +54,12 @@ io.on("connection", (socket)=>{
             // console.log(userID);
         }
     })
+
+    socket.on("turn", (RoomUsers, Turn)=>{
+        RoomUsers.forEach((user)=>{
+            if(user != socket?.id)io.to(user).emit("YourTurn", Turn)
+        })
+    })
 });
 
 server.listen(3000, ()=>{

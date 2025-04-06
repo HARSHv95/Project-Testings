@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { io} from "socket.io-client";
 
 
-export default function DotGrid({RoomUsers, main, setMain}) {
+export default function DotGrid({setMain, main, RoomUsers}) {
   const canvasRef = useRef(null);
   const [dots, setDots] = useState([]);
   const [lines, setLines] = useState([]);
@@ -11,7 +11,7 @@ export default function DotGrid({RoomUsers, main, setMain}) {
 
   const gridSize = 5;
   const dotSpacing = 100; 
-  const SquareMap = Array(gridSize).fill(null).map(()=>Array(gridSize).fill(0));
+  const SquareMap = Array(gridSize).fill(null).map(()=>Array(gridSize).fill(null).map(()=>Array(gridSize).fill(null).map(()=>Array(gridSize).fill(0))));
 
   useEffect(() => {
     const newDots = [];
@@ -26,7 +26,13 @@ export default function DotGrid({RoomUsers, main, setMain}) {
 
   useEffect(()=>{
     checkForSquare();
-    io.emit("turn", RoomUsers, !Turn)
+    const socket = io("http://localhost:3000");
+
+    if(!Turn){
+      RoomUsers.forEach((user)=>{
+        
+      })
+    }
 },[lines] );
 
   const checkForSquare = () => {
@@ -56,9 +62,19 @@ export default function DotGrid({RoomUsers, main, setMain}) {
             );
   
             if (hasAllSides) {
-              console.log("🎉 Square Detected!");
+              hasAllSides.every(({start, end})=> {
+                const x1 = (start.y-50)/dotSpacing;
+                const y1 = (start.x-50)/dotSpacing;
+                const x2 = (end.y-50)/dotSpacing;
+                const y2 = (end.x-50)/dotSpacing;
+
+                
+
+              })
               setTurn(true);
+              console.log("🎉 Square Detected!");
             }
+            else setTurn(false);
           }
         }
       }
@@ -109,7 +125,7 @@ export default function DotGrid({RoomUsers, main, setMain}) {
         if((selectedDot.x === clickedDot.x || selectedDot.y === clickedDot.y) && distance === 100){
             setLines([...lines, { start: selectedDot, end: clickedDot }]);
             drawGrid(dots, [...lines, { start: selectedDot, end: clickedDot }]);
-            checkForSquare();
+            
         }
         else console.log("Can't draw a line like that!!!");
         setSelectedDot(null);
