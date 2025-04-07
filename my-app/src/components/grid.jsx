@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
-import { io} from "socket.io-client";
+import { useState, useRef, useEffect, useContext } from "react";
+import { Fragment } from "react";
+import { SocketContext } from "./socketConnection";
 
 
 export default function DotGrid({setMain, main, RoomUsers}) {
@@ -8,6 +9,7 @@ export default function DotGrid({setMain, main, RoomUsers}) {
   const [lines, setLines] = useState([]);
   const [selectedDot, setSelectedDot] = useState(null);
   const [Turn , setTurn] = useState(false);
+  const {socket, disconnectSocket} = useContext(SocketContext);
 
   const gridSize = 5;
   const dotSpacing = 100; 
@@ -25,14 +27,7 @@ export default function DotGrid({setMain, main, RoomUsers}) {
   }, []);
 
   useEffect(()=>{
-    checkForSquare();
-    const socket = io("http://localhost:3000");
-
-    if(!Turn){
-      RoomUsers.forEach((user)=>{
-        
-      })
-    }
+    
 },[lines] );
 
   const checkForSquare = () => {
@@ -136,6 +131,7 @@ export default function DotGrid({setMain, main, RoomUsers}) {
   };
 
   return (
+    <Fragment>
     <div className="flex justify-center items-center h-screen">
       <canvas
         ref={canvasRef}
@@ -145,5 +141,6 @@ export default function DotGrid({setMain, main, RoomUsers}) {
         onClick={handleCanvasClick}
       ></canvas>
     </div>
+    </Fragment>
   );
 }

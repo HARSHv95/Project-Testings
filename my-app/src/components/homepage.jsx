@@ -1,6 +1,6 @@
-import { io } from "socket.io-client"
 import { nanoid } from "nanoid"
 import { useEffect, useState } from "react";
+import { SocketContext } from "./socketConnection";
 
 export default function HomePage({setopenPrompt, RoomUsers, setRoomUsers, setMain}){
 
@@ -10,16 +10,16 @@ export default function HomePage({setopenPrompt, RoomUsers, setRoomUsers, setMai
 
     function handleRandom(){
         const userID = nanoid(6);
-        console.log(userID);
-        const socket = io("http://localhost:3000");
+        const {socket, connectSocket} = useContext(SocketContext);
+
+        connectSocket();
 
         socket.emit("random", userID, 2);
 
         socket.on("randomFound", (usersArray)=>{
             setRoomUsers(usersArray);
             setMain("game");
-        });
-
+        })
     }
     return(
         <div>
