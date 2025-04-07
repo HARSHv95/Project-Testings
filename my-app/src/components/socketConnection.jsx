@@ -1,4 +1,5 @@
 import { createContext, useState} from "react";
+import { io } from "socket.io-client";
 
 export const SocketContext = createContext();
 
@@ -9,7 +10,9 @@ export const SocketProvider = ({children})=>{
         if(!socket){
             const newSocket = io("http://localhost:3000");
             setsocket(newSocket);
+            return newSocket;
         }
+        else return socket;
     };
 
     const disconnectSocket = ()=>{

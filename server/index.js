@@ -34,9 +34,9 @@ io.on("connection", (socket)=>{
                         if(users[key].size === 0)users[key].vacant = false;
                         added = true;
                         id.forEach((ID)=>{
-                            io.to(ID).emit("randomFound" ,id)
+                            io.to(ID).emit("randomFound" , key)
                         })
-                        console.log(id);
+                        console.log(key);
                     }
                 }
             }
@@ -55,9 +55,9 @@ io.on("connection", (socket)=>{
         }
     })
 
-    socket.on("turn", (RoomUsers, Turn)=>{
-        RoomUsers.forEach((user)=>{
-            if(user != socket?.id)io.to(user).emit("YourTurn", Turn)
+    socket.on("move", (key, Turn, lines)=>{
+        users[key].id.forEach((user)=>{
+            if(user != socket?.id)io.to(user).emit("oppositeMove",lines, Turn)
         })
     })
 });

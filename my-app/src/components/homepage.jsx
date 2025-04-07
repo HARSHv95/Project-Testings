@@ -1,25 +1,25 @@
 import { nanoid } from "nanoid"
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { SocketContext } from "./socketConnection";
 
-export default function HomePage({setopenPrompt, RoomUsers, setRoomUsers, setMain}){
+export default function HomePage({setopenPrompt, RoomID, setRoomID, setMain}){
+
+    const {socket, connectSocket} = useContext(SocketContext);
 
     useEffect(()=>{
-        console.log(RoomUsers);
-    }, [RoomUsers]);
+        console.log(RoomID);
+    }, [RoomID]);
 
     function handleRandom(){
         const userID = nanoid(6);
-        const {socket, connectSocket} = useContext(SocketContext);
-
-        connectSocket();
-
-        socket.emit("random", userID, 2);
-
-        socket.on("randomFound", (usersArray)=>{
-            setRoomUsers(usersArray);
-            setMain("game");
-        })
+        const socketConnection = connectSocket();
+        if(socketConnection){
+            socketConnection.emit("random", userID, 2);
+            socketConnection.on("randomFound", (ID)=>{
+                setRoomID(ID);
+                setMain("game");
+            })
+        }
     }
     return(
         <div>

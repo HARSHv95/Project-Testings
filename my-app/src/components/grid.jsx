@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import { SocketContext } from "./socketConnection";
 
 
-export default function DotGrid({setMain, main, RoomUsers}) {
+export default function DotGrid({setMain, main, RoomID}) {
   const canvasRef = useRef(null);
   const [dots, setDots] = useState([]);
   const [lines, setLines] = useState([]);
@@ -24,11 +24,23 @@ export default function DotGrid({setMain, main, RoomUsers}) {
     }
     setDots(newDots);
     drawGrid(newDots, []);
+
+    socket.on("oppositeMove", (gridUpdate, Turn)=>{
+      setLines(gridUpdate);
+    })
   }, []);
 
   useEffect(()=>{
-    
+    if(Turn){
+      socket.emit("move", RoomID, Turn, lines);
+    }
 },[lines] );
+
+  useEffect(()=>{
+    drawGrid(dots, lines);
+  }, [dots, lines]);
+
+
 
   const checkForSquare = () => {
     for (let i = 0; i < dots.length; i++) {
@@ -57,15 +69,6 @@ export default function DotGrid({setMain, main, RoomUsers}) {
             );
   
             if (hasAllSides) {
-              hasAllSides.every(({start, end})=> {
-                const x1 = (start.y-50)/dotSpacing;
-                const y1 = (start.x-50)/dotSpacing;
-                const x2 = (end.y-50)/dotSpacing;
-                const y2 = (end.x-50)/dotSpacing;
-
-                
-
-              })
               setTurn(true);
               console.log("🎉 Square Detected!");
             }
@@ -89,7 +92,7 @@ export default function DotGrid({setMain, main, RoomUsers}) {
       ctx.fill();
     });
 
-    lines.forEach(({ start, end }) => {
+    lines?.forEach(({ start, end }) => {
         ctx.beginPath();
         ctx.moveTo(start.x, start.y);
         ctx.lineTo(end.x, end.y);
@@ -119,7 +122,7 @@ export default function DotGrid({setMain, main, RoomUsers}) {
         const distance = Math.sqrt((clickedDot.x - selectedDot.x)**2 + (clickedDot.y-selectedDot.y)**2);
         if((selectedDot.x === clickedDot.x || selectedDot.y === clickedDot.y) && distance === 100){
             setLines([...lines, { start: selectedDot, end: clickedDot }]);
-            drawGrid(dots, [...lines, { start: selectedDot, end: clickedDot }]);
+            
             
         }
         else console.log("Can't draw a line like that!!!");
