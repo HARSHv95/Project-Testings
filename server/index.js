@@ -60,6 +60,16 @@ io.on("connection", (socket)=>{
             if(user != socket?.id)io.to(user).emit("oppositeMove",lines, Turn)
         })
     })
+
+    socket.on("leave", (key)=>{
+        users[key]?.id.forEach((user)=>{
+            if(socket?.id != user){
+                io.to(user).emit("PlayerLeft");
+            }
+        })
+        delete users[key];
+        console.log(users);
+    })
 });
 
 server.listen(3000, ()=>{

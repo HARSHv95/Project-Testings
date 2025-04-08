@@ -8,7 +8,7 @@ export default function DotGrid({setMain, main, RoomID}) {
   const [dots, setDots] = useState([]);
   const [lines, setLines] = useState([]);
   const [selectedDot, setSelectedDot] = useState(null);
-  const [Turn , setTurn] = useState(false);
+  const [Turn , setTurn] = useState(true);
   const {socket, disconnectSocket} = useContext(SocketContext);
 
   const gridSize = 5;
@@ -25,8 +25,15 @@ export default function DotGrid({setMain, main, RoomID}) {
     setDots(newDots);
     drawGrid(newDots, []);
 
-    socket.on("oppositeMove", (gridUpdate, Turn)=>{
+    socket.on("oppositeMove", (gridUpdate, turn)=>{
       setLines(gridUpdate);
+      if(turn)setTurn(true);
+      else setTurn(false);
+    })
+
+    socket.on("PlayerLeft", ()=>{
+      disconnectSocket();
+      setMain("home");
     })
   }, []);
 
@@ -133,6 +140,12 @@ export default function DotGrid({setMain, main, RoomID}) {
     }
   };
 
+  const handleButton = ()=>{
+    socket.emit("leave", RoomID);
+    disconnectSocket();
+    setMain("home")
+  }
+
   return (
     <Fragment>
     <div className="flex justify-center items-center h-screen">
@@ -144,6 +157,7 @@ export default function DotGrid({setMain, main, RoomID}) {
         onClick={handleCanvasClick}
       ></canvas>
     </div>
+    <button onClick={handleButton}>Leave the Game</button>
     </Fragment>
   );
 }
