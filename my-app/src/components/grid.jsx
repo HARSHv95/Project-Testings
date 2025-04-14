@@ -45,6 +45,7 @@ export default function DotGrid({setMain, main, RoomID}) {
 
   useEffect(()=>{
     drawGrid(dots, lines);
+    checkForSquare();
   }, [dots, lines]);
 
 
@@ -111,6 +112,11 @@ export default function DotGrid({setMain, main, RoomID}) {
   };
 
   const handleCanvasClick = (event) => {
+    if(!Turn){
+      console.log("Not your Turn!!");
+      return;
+    }
+    
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
