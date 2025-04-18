@@ -37,6 +37,7 @@ io.on("connection", (socket)=>{
                             io.to(ID).emit("randomFound" , key)
                         })
                         console.log(key);
+
                     }
                 }
             }
@@ -47,7 +48,8 @@ io.on("connection", (socket)=>{
         if(!added){
             users[userID] = {id : [socket?.id],
                 vacant : "true",
-                size : roomSize-1
+                size : roomSize-1,
+                TurnDecide : false
             };
 
             console.log(users);
@@ -55,9 +57,29 @@ io.on("connection", (socket)=>{
         }
     })
 
-    socket.on("move", (key, Turn, lines)=>{
+    socket.on("TurnDecide", (key)=>{
+        if(!users[key].TurnDecide){
+            const random = Math.floor(Math.random() * 2) + 1;
+
+            if(random === 1){
+                io.to(users[key].id[0]).emit("YourTurn");
+                io.to(users[key].id[1]).emit("OpponentTurn");
+            }
+            else{
+                io.to(users[key].id[1]).emit("YourTurn");
+                io.to(users[key].id[0]).emit("OpponentTurn");
+            }
+            users[key].TurnDecide = true;
+            console.log(random, users[key].id[random-1]);
+        }
+    })
+
+    socket.on("move", (lines, Turn, key)=>{
         users[key].id.forEach((user)=>{
-            if(user != socket?.id)io.to(user).emit("oppositeMove",lines, Turn)
+            if(user != socket?.id){
+                io.to(user).emit("oppositeMove",lines, Turn)
+                console.log(user, lines);
+            }
         })
     })
 

@@ -8,12 +8,12 @@ export default function DotGrid({setMain, main, RoomID}) {
   const [dots, setDots] = useState([]);
   const [lines, setLines] = useState([]);
   const [selectedDot, setSelectedDot] = useState(null);
-  const [Turn , setTurn] = useState(true);
+  const [Turn , setTurn] = useState(null);
   const {socket, disconnectSocket} = useContext(SocketContext);
+  const [CompletedSquares, setCompletedSquares] = useState([]);
 
   const gridSize = 5;
   const dotSpacing = 100; 
-  const SquareMap = Array(gridSize).fill(null).map(()=>Array(gridSize).fill(null).map(()=>Array(gridSize).fill(null).map(()=>Array(gridSize).fill(0))));
 
   useEffect(() => {
     const newDots = [];
@@ -25,32 +25,42 @@ export default function DotGrid({setMain, main, RoomID}) {
     setDots(newDots);
     drawGrid(newDots, []);
 
-    socket.on("oppositeMove", (gridUpdate, turn)=>{
-      setLines(gridUpdate);
-      if(turn)setTurn(true);
-      else setTurn(false);
+    socket.emit("TurnDecide", RoomID);
+
+    socket.on("YourTurn", ()=>{
+      setTurn(true);
+      console.log("hey");
+    })
+
+    socket.on("OpponentTurn", ()=>{
+      setTurn(false);
+      console.log("hi");
     })
 
     socket.on("PlayerLeft", ()=>{
       disconnectSocket();
       setMain("home");
     })
+
+    socket.on("oppositeMove", (updateLines, turn)=>{
+      console.log("Update lines received:- ", updateLines);
+      setLines(updateLines);
+      setTurn(!turn);
+      console.log("Lines and turn updated:- ", updateLines, !turn);
+    })
   }, []);
 
   useEffect(()=>{
-    if(Turn){
-      socket.emit("move", RoomID, Turn, lines);
-    }
-},[lines] );
-
-  useEffect(()=>{
     drawGrid(dots, lines);
-    checkForSquare();
   }, [dots, lines]);
 
+  const checkForSquare = (newLines) => {
 
+    if(lines.length === 0)return;
 
-  const checkForSquare = () => {
+    const newSquares = [];
+    let squareDetect = false;
+
     for (let i = 0; i < dots.length; i++) {
       for (let j = 0; j < dots.length; j++) {
         if (i === j) continue;
@@ -70,21 +80,32 @@ export default function DotGrid({setMain, main, RoomID}) {
               { start: dotB, end: dotD },
               { start: dotC, end: dotD }
             ].every(({ start, end }) =>
-              lines.some(line =>
-                (line.start === start && line.end === end) || 
-                (line.start === end && line.end === start)
+              newLines.some(line =>
+                (line.start.x === start.x && line.start.y === start.y &&
+                 line.end.x === end.x && line.end.y === end.y) ||
+                (line.start.x === end.x && line.start.y === end.y &&
+                 line.end.x === start.x && line.end.y === start.y)
               )
+              
             );
+
+            const key = `${dotA.x},${dotA.y}`;
   
-            if (hasAllSides) {
-              setTurn(true);
+            if (hasAllSides  && !CompletedSquares.includes(key)) {
               console.log("🎉 Square Detected!");
+              newSquares.push(key);
+              squareDetect = true;
             }
-            else setTurn(false);
           }
         }
       }
     }
+
+    if(newSquares.length > 0){
+      setCompletedSquares(prev => [...prev, ...newSquares])
+    }
+
+    return squareDetect;
   };
 
   const drawGrid = (dots, lines) => {
@@ -134,9 +155,18 @@ export default function DotGrid({setMain, main, RoomID}) {
       if (selectedDot) {
         const distance = Math.sqrt((clickedDot.x - selectedDot.x)**2 + (clickedDot.y-selectedDot.y)**2);
         if((selectedDot.x === clickedDot.x || selectedDot.y === clickedDot.y) && distance === 100){
-            setLines([...lines, { start: selectedDot, end: clickedDot }]);
-            
-            
+            const newLines = [...lines, { start: selectedDot, end: clickedDot }];
+            setLines(newLines);
+
+            const formSquare = checkForSquare(newLines);
+
+            socket.emit("move", newLines, formSquare ? true : false, RoomID);
+
+            console.log("New Lines :-", newLines, formSquare); 
+
+            if(!formSquare){
+              setTurn(false);
+            }
         }
         else console.log("Can't draw a line like that!!!");
         setSelectedDot(null);
@@ -163,6 +193,7 @@ export default function DotGrid({setMain, main, RoomID}) {
         onClick={handleCanvasClick}
       ></canvas>
     </div>
+    <div>{Turn ? <h1>Your Turn</h1> : <h1>Opponent Turn</h1>}</div>
     <button onClick={handleButton}>Leave the Game</button>
     </Fragment>
   );
