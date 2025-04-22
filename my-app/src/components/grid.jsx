@@ -45,16 +45,17 @@ export default function DotGrid({setMain, main, RoomID}) {
     socket.on("oppositeMove", (updateLines, turn)=>{
       console.log("Update lines received:- ", updateLines);
       setLines(updateLines);
+      checkForSquare(updateLines, false);
       setTurn(!turn);
       console.log("Lines and turn updated:- ", updateLines, !turn);
     })
   }, []);
 
   useEffect(()=>{
-    drawGrid(dots, lines);
-  }, [dots, lines]);
+    drawGrid(dots, lines, CompletedSquares);
+  }, [dots, lines, CompletedSquares]);
 
-  const checkForSquare = (newLines) => {
+  const checkForSquare = (newLines, isMyMove) => {
 
     if(lines.length === 0)return;
 
@@ -89,11 +90,17 @@ export default function DotGrid({setMain, main, RoomID}) {
               
             );
 
-            const key = `${dotA.x},${dotA.y}`;
+            const alreadyExists = CompletedSquares.some(
+              (s) => s.x === dotA.x && s.y === dotA.y
+            );
   
-            if (hasAllSides  && !CompletedSquares.includes(key)) {
+            if (hasAllSides  && !alreadyExists) {
               console.log("🎉 Square Detected!");
-              newSquares.push(key);
+              newSquares.push({
+              x: dotA.x,
+              y: dotA.y,
+              owner: isMyMove ? "Y" : "O",
+              });
               squareDetect = true;
             }
           }
@@ -108,7 +115,7 @@ export default function DotGrid({setMain, main, RoomID}) {
     return squareDetect;
   };
 
-  const drawGrid = (dots, lines) => {
+  const drawGrid = (dots, lines, CompletedSquares) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -130,6 +137,14 @@ export default function DotGrid({setMain, main, RoomID}) {
         ctx.stroke();
 
     });
+
+    CompletedSquares?.forEach(({ x, y, owner }) => {
+      ctx.fillStyle = owner === "Y" ? "green" : "orange";
+      ctx.font = "30px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(owner, x, y);
+    });
   };
 
   const handleCanvasClick = (event) => {
@@ -146,7 +161,7 @@ export default function DotGrid({setMain, main, RoomID}) {
     let clickedDot = null;
     dots.forEach((dot) => {
       const distance = Math.sqrt((clickX - dot.x) ** 2 + (clickY - dot.y) ** 2);
-      if (distance < 10) {
+      if (distance < 25) {
         clickedDot = dot;
       }
     });
@@ -158,7 +173,7 @@ export default function DotGrid({setMain, main, RoomID}) {
             const newLines = [...lines, { start: selectedDot, end: clickedDot }];
             setLines(newLines);
 
-            const formSquare = checkForSquare(newLines);
+            const formSquare = checkForSquare(newLines, true);
 
             socket.emit("move", newLines, formSquare ? true : false, RoomID);
 
@@ -184,17 +199,28 @@ export default function DotGrid({setMain, main, RoomID}) {
 
   return (
     <Fragment>
-    <div className="flex justify-center items-center h-screen">
-      <canvas
-        ref={canvasRef}
-        width={600}
-        height={600}
-        className="border"
-        onClick={handleCanvasClick}
-      ></canvas>
+  <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 space-y-6">
+    <canvas
+      ref={canvasRef}
+      width={600}
+      height={600}
+      className="border-4 border-blue-500 rounded-lg shadow-lg bg-white cursor-pointer"
+      onClick={handleCanvasClick}
+    ></canvas>
+
+    <div className="text-xl font-semibold text-gray-700">
+      {Turn ? "🎯 Your Turn" : "⏳ Opponent's Turn"}
     </div>
-    <div>{Turn ? <h1>Your Turn</h1> : <h1>Opponent Turn</h1>}</div>
-    <button onClick={handleButton}>Leave the Game</button>
-    </Fragment>
+
+    <button
+      onClick={handleButton}
+      className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium shadow-md transition duration-300"
+    >
+      Leave the Game
+    </button>
+  </div>
+</Fragment>
+
+    
   );
 }
