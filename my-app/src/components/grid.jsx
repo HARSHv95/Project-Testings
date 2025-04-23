@@ -45,7 +45,6 @@ export default function DotGrid({setMain, main, RoomID}) {
     socket.on("oppositeMove", (updateLines, turn)=>{
       console.log("Update lines received:- ", updateLines);
       setLines(updateLines);
-      checkForSquare(updateLines, false);
       setTurn(!turn);
       console.log("Lines and turn updated:- ", updateLines, !turn);
     })
@@ -53,11 +52,22 @@ export default function DotGrid({setMain, main, RoomID}) {
 
   useEffect(()=>{
     drawGrid(dots, lines, CompletedSquares);
+    console.log("Lines: ", lines);
   }, [dots, lines, CompletedSquares]);
+
+  useEffect(()=>{
+    console.log(CompletedSquares);
+  },[CompletedSquares]);
+
+  useEffect(() => {
+    if (!Turn) {
+      checkForSquare(lines, false);
+    }
+  }, [lines]);
 
   const checkForSquare = (newLines, isMyMove) => {
 
-    if(lines.length === 0)return;
+    if(newLines.length === 0)return;
 
     const newSquares = [];
     let squareDetect = false;
@@ -70,7 +80,7 @@ export default function DotGrid({setMain, main, RoomID}) {
         const dotB = dots[j];
   
         
-        if (Math.abs(dotA.x - dotB.x) === 100 && dotA.y === dotB.y) {
+        if ((dotA.x - dotB.x) === -100 && dotA.y === dotB.y) {
           const dotC = dots.find((d) => d.x === dotA.x && d.y === dotA.y + 100);
           const dotD = dots.find((d) => d.x === dotB.x && d.y === dotB.y + 100);
   
@@ -91,14 +101,14 @@ export default function DotGrid({setMain, main, RoomID}) {
             );
 
             const alreadyExists = CompletedSquares.some(
-              (s) => s.x === dotA.x && s.y === dotA.y
+              (s) => s.x === dotA.x + dotSpacing / 2 && s.y === dotA.y + dotSpacing / 2
             );
   
             if (hasAllSides  && !alreadyExists) {
               console.log("🎉 Square Detected!");
               newSquares.push({
-              x: dotA.x,
-              y: dotA.y,
+              x: dotA.x + dotSpacing / 2,
+              y: dotA.y + dotSpacing / 2,
               owner: isMyMove ? "Y" : "O",
               });
               squareDetect = true;
@@ -107,6 +117,8 @@ export default function DotGrid({setMain, main, RoomID}) {
         }
       }
     }
+
+    console.log("New Squares: ", newSquares);
 
     if(newSquares.length > 0){
       setCompletedSquares(prev => [...prev, ...newSquares])
@@ -139,11 +151,12 @@ export default function DotGrid({setMain, main, RoomID}) {
     });
 
     CompletedSquares?.forEach(({ x, y, owner }) => {
-      ctx.fillStyle = owner === "Y" ? "green" : "orange";
+      ctx.fillStyle = owner === "Y" ? "green" : "red";
       ctx.font = "30px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(owner, x, y);
+      console.log("Square drawn at: ", x, y);
     });
   };
 
@@ -161,7 +174,7 @@ export default function DotGrid({setMain, main, RoomID}) {
     let clickedDot = null;
     dots.forEach((dot) => {
       const distance = Math.sqrt((clickX - dot.x) ** 2 + (clickY - dot.y) ** 2);
-      if (distance < 25) {
+      if (distance < 10) {
         clickedDot = dot;
       }
     });
@@ -187,6 +200,7 @@ export default function DotGrid({setMain, main, RoomID}) {
         setSelectedDot(null);
       } else {
         setSelectedDot(clickedDot);
+        console.log("Selected Dot: ", clickedDot);
       }
     }
   };
