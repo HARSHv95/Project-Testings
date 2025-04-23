@@ -11,7 +11,9 @@ export default function DotGrid({setMain, main, RoomID}) {
   const [Turn , setTurn] = useState(null);
   const {socket, disconnectSocket} = useContext(SocketContext);
   const [CompletedSquares, setCompletedSquares] = useState([]);
-
+  const [MySquares, setMySquares] = useState(0);
+  const [OpponentSquares, setOpponentSquares] = useState(0);
+  
   const gridSize = 5;
   const dotSpacing = 100; 
 
@@ -64,6 +66,36 @@ export default function DotGrid({setMain, main, RoomID}) {
       checkForSquare(lines, false);
     }
   }, [lines]);
+
+  useEffect(() => {
+    if(CompletedSquares.length === (gridSize-1)*(gridSize-1)){
+      if(MySquares > OpponentSquares){
+        alert("You Won!! 🎉");
+      }
+      else{
+        alert("You Lost!! 😢");
+      }
+      socket.emit("GameOver", RoomID);
+    }
+    let count1 = 0;
+    let count2 = 0;
+    CompletedSquares.forEach((square) => {
+      if (square.owner === "Y") {
+        count1++;
+      }
+      else if (square.owner === "O") {
+        count2++;
+      };
+    });
+    setMySquares(count1);
+    setOpponentSquares(count2);
+  },[lines, CompletedSquares]);
+
+  useEffect(() => {
+    console.log("My Squares: ", MySquares);
+    console.log("Opponent Squares: ", OpponentSquares);
+  }
+, [MySquares, OpponentSquares]);
 
   const checkForSquare = (newLines, isMyMove) => {
 
