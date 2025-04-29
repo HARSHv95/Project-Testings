@@ -92,6 +92,63 @@ io.on("connection", (socket)=>{
         delete users[key];
         console.log(users);
     })
+
+    socket.on("create",(RoomID, roomSize)=>{
+        let alreadyadded = false;
+        Object.entries(users).forEach(([key, value])=>{
+            if(key === RoomID){
+                alreadyadded = true;
+            }
+        })
+
+        if(!alreadyadded){
+            users[RoomID] = {id : [socket?.id],
+                vacant : "true",
+                size : roomSize-1,
+                TurnDecide : false
+            };
+            io.to(socket?.id).emit("roomCreated", RoomID);
+            console.log(users);
+        }
+        else{
+            io.to(socket?.id).emit("roomAlreadyExists")
+        }
+    })
+
+    socket.on("FindRoom", (userID)=>{
+        let exist = false;
+        Object.entries(users).forEach(([key, value])=>{
+            if(key === userID)exist = true;
+        })
+
+        if(exist){
+            if(users[userID].vacant === false){
+                io.to(socket?.id).emit("RoomFull", userID);
+            }
+            else{
+                users[userID].id.push(socket?.id);
+                users[userID].size = users[userID].size -1;
+                users[userID].vacant = false;
+
+                console.log(users[userID].id);
+
+                io.to(socket?.id).emit("roomFound", userID, 2);
+                users[userID].id.forEach((user)=>{
+                    if(user != socket?.id){
+                        io.to(user).emit("roomupdate", userID, 2);
+                    }
+                })
+            }
+        }
+    })
+
+    socket.on("gamestart",(ID)=>{
+        users[ID].id.forEach((user)=>{
+            if(user != socket?.id){
+                io.to(user).emit("Gamestart", ID)
+            }
+        })
+    })
 });
 
 server.listen(3000, ()=>{

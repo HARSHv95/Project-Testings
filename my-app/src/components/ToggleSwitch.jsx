@@ -1,19 +1,16 @@
 import React, { useState } from "react";
-import "./ToggleSwitch.css";
+import "./ToggleSwitch.css"; // (Link the CSS I gave earlier)
 
-export default function ToggleSwitch({ onChange, initialState = false }) {
-  const [isOn, setIsOn] = useState(initialState);
+export default function ToggleSwitch({ OpenRoom, setOpenRoom }) {
 
-  const toggleSwitch = () => {
-    setIsOn(!isOn);
-    if (onChange) {
-      onChange(!isOn);
-    }
+  const handleToggle = () => {
+    setOpenRoom(!OpenRoom);
   };
 
   return (
-    <div className="toggle-switch" onClick={toggleSwitch}>
-      <div className={`switch ${isOn ? "on" : "off"}`}></div>
-    </div>
+    <label className="toggle-switch">
+      <input type="checkbox" checked={OpenRoom} onChange={handleToggle} />
+      <span className="slider"></span>
+    </label>
   );
 }

@@ -18,7 +18,7 @@ function App() {
         ? <HomePage setopenPrompt={setopenPrompt} RoomID={RoomID} setRoomID={setRoomID} setMain={setMain} />
         : <DotGrid setMain={setMain} main={main} RoomID={RoomID} /> 
       }
-      <RenderPrompt setMain={setMain} setopenPrompt={setopenPrompt} openPrompt={openPrompt} />
+      <RenderPrompt setMain={setMain} setopenPrompt={setopenPrompt} openPrompt={openPrompt} RoomID={RoomID} setRoomID={setRoomID}/>
     </div>
   );
 }
