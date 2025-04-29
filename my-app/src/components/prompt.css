@@ -126,6 +126,7 @@
 
 /* For join room smaller input */
 .input-field.small-input {
+  color: black;
   width: 200px;
   padding: 8px;
   font-size: 14px;
