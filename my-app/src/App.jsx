@@ -11,14 +11,17 @@ function App() {
   const [main, setMain] = useState("home");
   const [openPrompt, setopenPrompt] = useState(false);
   const [RoomID, setRoomID] = useState([]); 
+  const [RoomSize, setRoomSize] = useState(0);
+  const [RoomState, setRoomState] = useState("join");
+
 
   return (
     <div>
       {main === "home" 
-        ? <HomePage setopenPrompt={setopenPrompt} RoomID={RoomID} setRoomID={setRoomID} setMain={setMain} />
+        ? <HomePage setopenPrompt={setopenPrompt} RoomID={RoomID} setRoomID={setRoomID} setMain={setMain} setRoomSize={setRoomSize} setRoomState={setRoomState} />
         : <DotGrid setMain={setMain} main={main} RoomID={RoomID} /> 
       }
-      <RenderPrompt setMain={setMain} setopenPrompt={setopenPrompt} openPrompt={openPrompt} RoomID={RoomID} setRoomID={setRoomID}/>
+      <RenderPrompt setMain={setMain} setopenPrompt={setopenPrompt} openPrompt={openPrompt} RoomID={RoomID} setRoomID={setRoomID} RoomSize={RoomSize} setRoomSize={setRoomSize} RoomState={setRoomState} setRoomState={setRoomState}/>
     </div>
   );
 }

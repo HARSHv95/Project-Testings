@@ -2,7 +2,7 @@ import { nanoid } from "nanoid"
 import { useEffect, useState, useContext } from "react";
 import { SocketContext } from "./socketConnection";
 
-export default function HomePage({setopenPrompt, RoomID, setRoomID, setMain}){
+export default function HomePage({setopenPrompt, RoomID, setRoomID, setMain, setRoomSize, setRoomState}){
 
     const {socket, connectSocket} = useContext(SocketContext);
 
@@ -15,6 +15,12 @@ export default function HomePage({setopenPrompt, RoomID, setRoomID, setMain}){
         const socketConnection = connectSocket();
         if(socketConnection){
             socketConnection.emit("random", userID, 2);
+            socketConnection.on("randomroomFound", (ID, size)=>{
+                setRoomID(ID);
+                setRoomSize(size);
+                setRoomState("join");
+                setopenPrompt(true);
+            })
             socketConnection.on("randomFound", (ID)=>{
                 setRoomID(ID);
                 setMain("game");

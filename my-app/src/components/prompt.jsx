@@ -6,16 +6,20 @@ import ToggleSwitch from "./ToggleSwitch";
 import "./prompt.css";
 
 
-const userID = nanoid(6);
+export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomID, setRoomID, RoomSize, setRoomSize, RoomState, setRoomState }) {
 
-
-export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomID, setRoomID }) {
-
-    const [RoomState, setRoomState] = useState("join");
     const { socket, connectSocket, disconnectSocket } = useContext(SocketContext);
     const [OpenRoom, setOpenRoom] = useState(false);
-    const [RoomSize, setRoomSize] = useState(0); // Default room size
     const [EnterId, setEnterId] = useState("");
+
+    useEffect(() => {
+        if(socket){
+            socket.on("Gamestart", (ID) => {
+                setMain("game");
+                setopenPrompt(false);
+            });
+        }
+    },[socket]);
 
    
 
@@ -26,8 +30,20 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
         }
     }, [RoomState]);
 
+    useEffect(() => {
+        if(RoomID && socket){
+            if(OpenRoom){
+                socket.emit("openparty", RoomID);
+            }
+            else{
+                socket.emit("closeparty", RoomID);
+            }
+        }
+    },[OpenRoom, socket]);
+
 
     const handleCreateClick = () => {
+        const userID = nanoid(6);
         setRoomState("create");
         const SocketConnection = connectSocket();
         if (SocketConnection) {
@@ -122,7 +138,7 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
                         // Create Room branch remains the same
                         <>
                             <div className="room-toggle-container">
-                                <div className="room-id">Room ID: {userID}</div>
+                                <div className="room-id">Room ID: {RoomID}</div>
                                 <ToggleSwitch OpenRoom={OpenRoom} setOpenRoom={setOpenRoom} />
                             </div>
                             <div className="open-party-label">
