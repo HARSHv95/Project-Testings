@@ -1,0 +1,48 @@
+/* Overall page container with a vibrant gradient */
+.grid-page-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1f4037, #99f2c8);
+  padding: 2rem;
+}
+
+/* Container for the canvas grid */
+.grid-container {
+  background: #ffffff;
+  border: 6px solid #3498db;
+  border-radius: 15px;
+  box-shadow: 0px 10px 30px rgba(52, 152, 219, 0.5);
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* Styled status text */
+.game-status {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Styled leave button */
+.leave-button {
+  background: #e74c3c;
+  border: none;
+  color: #fff;
+  font-size: 1.2rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  margin-top: 1.5rem;
+  box-shadow: 0px 5px 15px rgba(231, 76, 60, 0.5);
+  transition: background 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.leave-button:hover {
+  background: #c0392b;
+  transform: scale(1.05);
+}

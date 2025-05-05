@@ -1,0 +1,62 @@
+/* Overall dialog container styling for a gaming vibe */
+.dialog-container {
+    background: radial-gradient(circle at top left, #1e3c72, #2a5298);
+    color: #fff;
+    border: 2px solid #f39c12;
+    box-shadow: 0 0 20px rgba(243, 156, 18, 0.7);
+    border-radius: 10px;
+    padding: 1rem;
+    overflow: hidden;
+    /* For Firefox */
+    scrollbar-width: none;
+}
+
+/* Dialog title styling */
+.dialog-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    text-align: center;
+    padding: 1rem;
+    border-bottom: 2px solid #f39c12;
+}
+
+/* Dialog content styling - adjust the input styling */
+.dialog-content {
+    padding: 1rem;
+    overflow: hidden;
+}
+
+.dialog-content input {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 5px;
+    margin-top: 1rem;
+}
+
+/* Dialog actions and button styling */
+.dialog-actions {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.dialog-actions button {
+    background: #f39c12;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.dialog-actions button:hover {
+    background: #e67e22;
+}
+
+.dialog-container::-webkit-scrollbar {
+    display: none;
+}

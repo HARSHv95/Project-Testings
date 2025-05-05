@@ -1,28 +1,29 @@
 import { nanoid } from "nanoid"
 import { useEffect, useState, useContext } from "react";
 import { SocketContext } from "./socketConnection";
+import "./homepage.css";
 
-export default function HomePage({setopenPrompt, RoomID, setRoomID, setMain, setRoomSize, setRoomState, Name, setRoomMembers}){
+export default function HomePage({ setopenPrompt, RoomID, setRoomID, setMain, setRoomSize, setRoomState, Name, setRoomMembers }) {
 
-    const {socket, connectSocket, disconnectSocket} = useContext(SocketContext);
+    const { socket, connectSocket, disconnectSocket } = useContext(SocketContext);
 
-    useEffect(()=>{
+    useEffect(() => {
         console.log(RoomID);
     }, [RoomID]);
 
-    function handleRandom(){
+    function handleRandom() {
         const userID = nanoid(6);
         const socketConnection = connectSocket();
-        if(socketConnection){
+        if (socketConnection) {
             socketConnection.emit("random", userID, 2, Name);
-            socketConnection.on("randomroomFound", (ID, size, members)=>{
+            socketConnection.on("randomroomFound", (ID, size, members) => {
                 setRoomMembers(members);
                 setRoomID(ID);
                 setRoomSize(size);
                 setRoomState("join");
                 setopenPrompt(true);
             })
-            socketConnection.on("randomFound", (ID, members)=>{
+            socketConnection.on("randomFound", (ID, members) => {
                 setRoomMembers(members);
                 setRoomID(ID);
                 setMain("game");
@@ -31,14 +32,14 @@ export default function HomePage({setopenPrompt, RoomID, setRoomID, setMain, set
     }
 
     const handleFriend = () => {
-        if(socket){
+        if (socket) {
             disconnectSocket();
         }
         setopenPrompt(true);
     }
 
-    return(
-        <div>
+    return (
+        <div className="homepage-container">
             <h1>Welcome to the Game!!!!</h1>
             <button onClick={handleFriend}>Join with Friend</button>
             <button onClick={handleRandom}>Join with Random</button>

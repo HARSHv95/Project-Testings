@@ -18,6 +18,7 @@ function App() {
   const [Name, setName] = useState("");
   const [openNamePrompt, setopenNamePrompt1] = useState(true);
   const [RoomMembers, setRoomMembers] = useState([]);
+  const [GridSize, setGridSize] = useState(5);
 
   return (
     <div>
