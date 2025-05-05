@@ -6,61 +6,80 @@ import ToggleSwitch from "./ToggleSwitch";
 import "./prompt.css";
 
 
-export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomID, setRoomID, RoomSize, setRoomSize, RoomState, setRoomState }) {
+export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomID, setRoomID, RoomSize, setRoomSize, RoomState, setRoomState, Host, setHost, Name, RoomMembers, setRoomMembers }) {
 
     const { socket, connectSocket, disconnectSocket } = useContext(SocketContext);
     const [OpenRoom, setOpenRoom] = useState(false);
     const [EnterId, setEnterId] = useState("");
+    const [JoinedRoom, setJoinedRoom] = useState(false);
 
     useEffect(() => {
-        if(socket){
+        if (socket) {
             socket.on("Gamestart", (ID) => {
                 setMain("game");
                 setopenPrompt(false);
             });
         }
-    },[socket]);
+    }, [socket]);
 
-   
+
 
     useEffect(() => {
-        if (socket) {
-            console.log("Socket disconnected");
-            disconnectSocket();
+        if (RoomState === "join") {
+            if (socket) {
+                console.log("Socket disconnected");
+                if (RoomID) {
+                    socket.emit("PlayerLeft", RoomID);
+                }
+                disconnectSocket();
+            }
         }
+
     }, [RoomState]);
 
     useEffect(() => {
-        if(RoomID && socket){
-            if(OpenRoom){
+        if (RoomID && socket) {
+            if (OpenRoom) {
                 socket.emit("openparty", RoomID);
             }
-            else{
+            else {
                 socket.emit("closeparty", RoomID);
             }
         }
-    },[OpenRoom, socket]);
+    }, [OpenRoom, socket]);
 
 
     const handleCreateClick = () => {
-        const userID = nanoid(6);
-        setRoomState("create");
-        const SocketConnection = connectSocket();
-        if (SocketConnection) {
-            SocketConnection.emit("create", userID, 2);
-            SocketConnection.on("roomCreated", (ID) => {
-                console.log("Room Created!!!");
-                setRoomID(ID);
-                setRoomSize(1);
-            })
-            SocketConnection.on("roomupdate", (ID, size)=>{
-                console.log(ID, size);
-                setRoomSize(size);
-            })
+        if (RoomState != "create") {
+            if(RoomID && socket && RoomSize > 0){
+                socket.emit("PlayerLeft", RoomID, Name);
+                setRoomMembers([]);
+                setRoomID("");
+                setRoomSize(0);
+            }
+            const userID = nanoid(6);
+            setRoomState("create");
+            console.log(RoomState);
+            const SocketConnection = connectSocket();
+            if (SocketConnection) {
+                SocketConnection.emit("create", userID, 2, OpenRoom, Name);
+                SocketConnection.on("roomCreated", (ID, members) => {
+                    console.log("Room Created!!!");
+                    setRoomMembers(members);
+                    setHost(true);
+                    setRoomID(ID);
+                    setRoomSize(1);
+                    console.log(RoomMembers);
+                })
+                SocketConnection.on("roomupdate", (ID, size, members) => {
+                    setRoomMembers(members);
+                    console.log(ID, size);
+                    setRoomSize(size);
+                })
+            }
         }
     }
 
-    const handleExitClick = () => {}
 
     const handleStartClick = () => {
         if (RoomSize > 1) {
@@ -81,26 +100,82 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
             console.log("Joining room with ID:", EnterId);
             const SocketConnection = connectSocket();
             if (SocketConnection) {
-                SocketConnection.emit("FindRoom", EnterId);
-                SocketConnection.on("roomFound", (ID, roomSize) => {
-                    console.log("Room Found", ID, roomSize)
+                SocketConnection.emit("FindRoom", EnterId, Name);
+                SocketConnection.on("roomFound", (ID, roomSize, members) => {
+                    console.log("Room Found", ID, roomSize);
+                    setRoomMembers(members);
                     setRoomID(ID);
                     setRoomSize(roomSize);
                 });
-                SocketConnection.on("Gamestart", (ID)=>{
+                SocketConnection.on("RoomClosed", () => {
+                    setRoomID("");
+                    setRoomSize(0);
+                    setRoomState("join");
+                    setRoomMembers([]);
+                    setHost(false);
+                    setOpenRoom(false);
+                    disconnectSocket();
+                })
+                SocketConnection.on("Gamestart", (ID) => {
                     setMain("game");
                     setopenPrompt(false);
                 })
+
             }
         }
     };
+
+    const handleJoinRoomClick = () => {
+        if (RoomState === "create" && Host) {
+            console.log("Hello");
+            if (socket) {
+                console.log("Socket disconnected");
+                socket.emit("HostLeft", RoomID);
+                socket.on("RoomClosed", () => {
+                    setRoomID("");
+                    setRoomSize(0);
+                    setRoomState("join");
+                    setRoomMembers([]);
+                    setHost(false);
+                    setOpenRoom(false);
+                    disconnectSocket();
+                })
+            }
+        }
+        else {
+            setRoomState("join");
+            if (socket) {
+                console.log("Socket disconnected");
+                socket.emit("PlayerLeft", RoomID, Name);
+                disconnectSocket();
+            }
+            setEnterId("");
+            setRoomID(null);
+            setRoomSize(0);
+        }
+    }
+
+    const handleClose = () => {
+        if(socket){
+            disconnectSocket();
+        }
+        setRoomID("");
+        setRoomSize(0);
+        setRoomState("join");
+        setRoomMembers([]);
+        setHost(false);
+        setOpenRoom(false);
+        setEnterId("");
+        setopenPrompt(false);
+        setMain("home");
+    }
     return (
         <Fragment>
-            <Dialog open={openPrompt} onClose={() => { setMain("home"); setopenPrompt(false); }}>
+            <Dialog open={openPrompt} onClose={handleClose}>
                 <DialogTitle>
                     <div className="prompt-header">
                         <button className={`tab-button ${RoomState === "create" ? "active" : ""}`} onClick={handleCreateClick}>Create Room</button>
-                        <button className={`tab-button ${RoomState === "join" ? "active" : ""}`} onClick={() => setRoomState("join")}>Join Room</button>
+                        <button className={`tab-button ${RoomState === "join" ? "active" : ""}`} onClick={handleJoinRoomClick}>Join Room</button>
                     </div>
                 </DialogTitle>
                 <DialogContent>
@@ -114,9 +189,14 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
                                     <div className="member-list-container">
                                         <div className="member-list-title">Members in Room:</div>
                                         <ul className="member-list">
-                                            <li>Player 1</li>
-                                            <li>Player 2</li>
-                                            {/* You can map over a state (e.g., roomMembers) if available */}
+                                            {RoomMembers?.map((member, index) => {
+                                                console.log(member, Host);
+                                                return (
+                                                    <li key={index}>
+                                                        {member} {Host && Name === member ? "(HOST)" : ""}
+                                                    </li>
+                                                );
+                                            })}
                                         </ul>
                                     </div>
                                 </div>
@@ -137,6 +217,7 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
                     ) : (
                         // Create Room branch remains the same
                         <>
+
                             <div className="room-toggle-container">
                                 <div className="room-id">Room ID: {RoomID}</div>
                                 <ToggleSwitch OpenRoom={OpenRoom} setOpenRoom={setOpenRoom} />
@@ -147,10 +228,14 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
                             <div className="member-list-container">
                                 <div className="member-list-title">Members in Room:</div>
                                 <ul className="member-list">
-                                    <li>Player 1 (Host)</li>
-                                    <li>
-                                        {RoomSize === 2 ? <>Player 2 (Active)</> : <>Player 2 (Waiting...)</>}
-                                    </li>
+                                    {RoomMembers?.map((member, index) => {
+                                        console.log(member, Host);
+                                        return (
+                                            <li key={index}>
+                                                {member} {Host && Name === member ? "(HOST)" : ""}
+                                            </li>
+                                        );
+                                    })}
                                 </ul>
                             </div>
                         </>
@@ -159,7 +244,7 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
                 <DialogActions>
                     {RoomState === "join" ? (
                         RoomID && RoomSize > 0 ? (
-                            <button className="action-button" onClick={handleExitClick}>Exit</button>
+                            <button className="action-button" onClick={handleJoinRoomClick}>Exit</button>
                         ) : (
                             <button className="action-button" onClick={handleJoinClick}>Join</button>
                         )

@@ -20,7 +20,7 @@ let users = {};
 io.on("connection", (socket) => {
     console.log(socket?.id);
 
-    socket.on("random", (userID, roomSize) => {
+    socket.on("random", (userID, roomSize, username) => {
         let added = false;
         Object.entries(users).forEach(([key, value]) => {
             console.log("Hello")
@@ -28,15 +28,16 @@ io.on("connection", (socket) => {
             if (vacant && !added && party === "open") {
                 if (value.class === "room") {
                     value.id.push(socket?.id);
+                    value.members.push(username);
                     value.size = size - 1;
                     if (value.size === 0) value.vacant = false;
                     added = true;
                     value.id.forEach((ID) => {
                         if (ID !== socket?.id) {
-                            io.to(ID).emit("roomupdate", key, 2);
+                            io.to(ID).emit("roomupdate", key, 2,value.members);
                         }
                         else {
-                            io.to(socket?.id).emit("randomroomFound", key, 2);
+                            io.to(socket?.id).emit("randomroomFound", key, 2,value.members);
                         }
                     })
                 }
@@ -47,8 +48,9 @@ io.on("connection", (socket) => {
                         users[key].size = size - 1;
                         if (users[key].size === 0) users[key].vacant = false;
                         added = true;
+                        users[key].members.push(username);
                         id.forEach((ID) => {
-                            io.to(ID).emit("randomFound", key);
+                            io.to(ID).emit("randomFound", key, users[key].members);
                         });
                         console.log(key);
                     }
@@ -61,6 +63,7 @@ io.on("connection", (socket) => {
         if (!added) {
             users[userID] = {
                 id: [socket?.id],
+                members : [username],
                 vacant: "true",
                 size: roomSize - 1,
                 TurnDecide: false,
@@ -109,7 +112,7 @@ io.on("connection", (socket) => {
         console.log(users);
     })
 
-    socket.on("create", (RoomID, roomSize) => {
+    socket.on("create", (RoomID, roomSize, party, username) => {
         let alreadyadded = false;
         Object.entries(users).forEach(([key, value]) => {
             if (key === RoomID) {
@@ -120,13 +123,17 @@ io.on("connection", (socket) => {
         if (!alreadyadded) {
             users[RoomID] = {
                 id: [socket?.id],
+                members: [username],
                 vacant: "true",
                 size: roomSize - 1,
                 TurnDecide: false,
-                party: "close",
+                party: "open",
                 class: "room"
             };
-            io.to(socket?.id).emit("roomCreated", RoomID);
+            if(!party){
+                users[RoomID].party = "close";
+            }
+            io.to(socket?.id).emit("roomCreated", RoomID, users[RoomID].members);
             console.log(users);
         }
         else {
@@ -134,7 +141,7 @@ io.on("connection", (socket) => {
         }
     })
 
-    socket.on("FindRoom", (userID) => {
+    socket.on("FindRoom", (userID, username) => {
         let exist = false;
         Object.entries(users).forEach(([key, value]) => {
             if (key === userID) exist = true;
@@ -148,13 +155,14 @@ io.on("connection", (socket) => {
                 users[userID].id.push(socket?.id);
                 users[userID].size = users[userID].size - 1;
                 users[userID].vacant = false;
+                users[userID].members.push(username);
 
                 console.log(users[userID].id);
 
-                io.to(socket?.id).emit("roomFound", userID, 2);
+                io.to(socket?.id).emit("roomFound", userID, 2, users[userID].members);
                 users[userID].id.forEach((user) => {
                     if (user != socket?.id) {
-                        io.to(user).emit("roomupdate", userID, 2);
+                        io.to(user).emit("roomupdate", userID, 2, users[userID].members);
                     }
                 })
             }
@@ -181,6 +189,38 @@ io.on("connection", (socket) => {
             users[ID].party = "close";
             console.log(ID, users[ID]);
         }
+    });
+
+    socket.on("PlayerLeft", (ID, username) => {
+        if (users[ID]) {
+            const arr = users[ID].id.filter((user) => user !== socket?.id);
+            const arr1 = users[ID].members.filter((user) => user !== username);
+            users[ID].members = arr1;
+            users[ID].id.forEach((user) => {
+                if (user != socket?.id) {
+                    io.to(user).emit("roomupdate", ID, arr.length, arr1);
+                }
+            })
+            users[ID].id = arr;
+            users[ID].vacant = true;
+            users[ID].size = 1;
+            users[ID].TurnDecide = false;
+            console.log(ID, users[ID]);
+        }
+    })
+
+    socket.on("GameOver",(ID)=>{
+        users[ID].id.forEach((user) => {
+            io.to(user).emit("gameresult");
+        })
+    })
+
+    socket.on("HostLeft", (ID) => {
+        users[ID].id.forEach((user) => {
+            io.to(user).emit("RoomClosed");
+        })
+        delete users[ID];
+        console.log(users);
     })
 });
 

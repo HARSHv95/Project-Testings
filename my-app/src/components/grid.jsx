@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import { SocketContext } from "./socketConnection";
 
 
-export default function DotGrid({setMain, main, RoomID}) {
+export default function DotGrid({setMain, main, RoomID, Host, setopenPrompt}) {
   const canvasRef = useRef(null);
   const [dots, setDots] = useState([]);
   const [lines, setLines] = useState([]);
@@ -16,6 +16,17 @@ export default function DotGrid({setMain, main, RoomID}) {
   
   const gridSize = 5;
   const dotSpacing = 100; 
+
+  useEffect(() => {
+    const handleUnload = () => {
+      socket.emit("leave", RoomID);
+      disconnectSocket();
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, []);
 
   useEffect(() => {
     const newDots = [];
@@ -68,15 +79,6 @@ export default function DotGrid({setMain, main, RoomID}) {
   }, [lines]);
 
   useEffect(() => {
-    if(CompletedSquares.length === (gridSize-1)*(gridSize-1)){
-      if(MySquares > OpponentSquares){
-        alert("You Won!! 🎉");
-      }
-      else{
-        alert("You Lost!! 😢");
-      }
-      socket.emit("GameOver", RoomID);
-    }
     let count1 = 0;
     let count2 = 0;
     CompletedSquares.forEach((square) => {
@@ -92,10 +94,36 @@ export default function DotGrid({setMain, main, RoomID}) {
   },[lines, CompletedSquares]);
 
   useEffect(() => {
+    if(CompletedSquares.length === (gridSize-1)*(gridSize-1)){
+      if(MySquares > OpponentSquares){
+        alert("You Won!! 🎉");
+      }
+      else if(MySquares < OpponentSquares){
+        alert("You Lost!! 😢");
+      }
+      else {
+        alert("It's a Tie!! 🤝");
+
+      }
+      if(Host){
+        socket.emit("GameOver",RoomID);
+      }
+      socket.on("gameresult",()=>{
+        setopenPrompt(true);
+        setMain("home");
+      })
+    }
+  },[MySquares, OpponentSquares]);
+
+  useEffect(() => {
     console.log("My Squares: ", MySquares);
     console.log("Opponent Squares: ", OpponentSquares);
   }
 , [MySquares, OpponentSquares]);
+
+useEffect(() => {
+  drawGrid(dots, lines, CompletedSquares);
+},[selectedDot])
 
   const checkForSquare = (newLines, isMyMove) => {
 
@@ -167,8 +195,17 @@ export default function DotGrid({setMain, main, RoomID}) {
 
     dots.forEach((dot) => {
       ctx.beginPath();
-      ctx.arc(dot.x, dot.y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = "black";
+      // If the dot is selected, give it a glowing effect
+      if (selectedDot && dot.x === selectedDot.x && dot.y === selectedDot.y) {
+        ctx.shadowColor = "yellow";
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = "yellow";
+        ctx.arc(dot.x, dot.y, 8, 0, Math.PI * 2); // Slightly larger dot
+      } else {
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "black";
+        ctx.arc(dot.x, dot.y, 5, 0, Math.PI * 2);
+      }
       ctx.fill();
     });
 

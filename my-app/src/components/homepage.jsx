@@ -2,9 +2,9 @@ import { nanoid } from "nanoid"
 import { useEffect, useState, useContext } from "react";
 import { SocketContext } from "./socketConnection";
 
-export default function HomePage({setopenPrompt, RoomID, setRoomID, setMain, setRoomSize, setRoomState}){
+export default function HomePage({setopenPrompt, RoomID, setRoomID, setMain, setRoomSize, setRoomState, Name, setRoomMembers}){
 
-    const {socket, connectSocket} = useContext(SocketContext);
+    const {socket, connectSocket, disconnectSocket} = useContext(SocketContext);
 
     useEffect(()=>{
         console.log(RoomID);
@@ -14,23 +14,33 @@ export default function HomePage({setopenPrompt, RoomID, setRoomID, setMain, set
         const userID = nanoid(6);
         const socketConnection = connectSocket();
         if(socketConnection){
-            socketConnection.emit("random", userID, 2);
-            socketConnection.on("randomroomFound", (ID, size)=>{
+            socketConnection.emit("random", userID, 2, Name);
+            socketConnection.on("randomroomFound", (ID, size, members)=>{
+                setRoomMembers(members);
                 setRoomID(ID);
                 setRoomSize(size);
                 setRoomState("join");
                 setopenPrompt(true);
             })
-            socketConnection.on("randomFound", (ID)=>{
+            socketConnection.on("randomFound", (ID, members)=>{
+                setRoomMembers(members);
                 setRoomID(ID);
                 setMain("game");
             })
         }
     }
+
+    const handleFriend = () => {
+        if(socket){
+            disconnectSocket();
+        }
+        setopenPrompt(true);
+    }
+
     return(
         <div>
             <h1>Welcome to the Game!!!!</h1>
-            <button onClick={()=> setopenPrompt(true)}>Join with Friend</button>
+            <button onClick={handleFriend}>Join with Friend</button>
             <button onClick={handleRandom}>Join with Random</button>
         </div>
     )
