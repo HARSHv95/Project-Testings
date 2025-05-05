@@ -4,6 +4,7 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const http = require("http");
 const server = http.createServer(app);
+const ROOM_IDLE_TIME = 5 * 60 * 1000;
 
 app.use(cors());
 app.use(express.json());
@@ -68,7 +69,8 @@ io.on("connection", (socket) => {
                 size: roomSize - 1,
                 TurnDecide: false,
                 party: "open",
-                class: "random"
+                class: "random",
+                createdAt: Date.now()
             };
 
             console.log(users);
@@ -223,6 +225,21 @@ io.on("connection", (socket) => {
         console.log(users);
     })
 });
+
+setInterval(() => {
+    const now = Date.now();
+    Object.keys(users).forEach((roomID) => {
+        // Check only random rooms
+        if (users[roomID].class === "random") {
+            const idleTime = now - users[roomID].createdAt;
+            if (idleTime > ROOM_IDLE_TIME) {
+                console.log(`Room ${roomID} deleted due to inactivity (idle for ${idleTime} ms)`);
+                // Optionally notify connected sockets about room closure here if needed
+                delete users[roomID];
+            }
+        }
+    });
+}, 60000);
 
 server.listen(3000, () => {
     console.log("Server running on port 3000");

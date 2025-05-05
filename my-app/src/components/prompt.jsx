@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { SocketContext } from "./socketConnection";
 import ToggleSwitch from "./ToggleSwitch";
 import "./prompt.css";
+import { Socket } from "socket.io-client";
 
 
 export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomID, setRoomID, RoomSize, setRoomSize, RoomState, setRoomState, Host, setHost, Name, RoomMembers, setRoomMembers }) {
@@ -107,6 +108,11 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
                     setRoomID(ID);
                     setRoomSize(roomSize);
                 });
+                SocketConnection.on("RoomFull", (ID) => {
+                    alert("Room is full. Please try again later.");
+                    setEnterId("");
+                    setRoomID("");
+                });
                 SocketConnection.on("RoomClosed", () => {
                     setRoomID("");
                     setRoomSize(0);
@@ -157,6 +163,9 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
 
     const handleClose = () => {
         if(socket){
+            if(!Host){
+                socket.emit("PlayerLeft", RoomID, Name);
+            }
             disconnectSocket();
         }
         setRoomID("");
