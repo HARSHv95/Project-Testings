@@ -4,7 +4,7 @@ import { SocketContext } from "./socketConnection";
 import "./grid.css";
 
 
-export default function DotGrid({ setMain, main, RoomID, Host, setopenPrompt }) {
+export default function DotGrid({ setMain, main, RoomID, Host, setopenPrompt, RoomMembers, Name }) {
   const canvasRef = useRef(null);
   const [dots, setDots] = useState([]);
   const [lines, setLines] = useState([]);
@@ -15,7 +15,7 @@ export default function DotGrid({ setMain, main, RoomID, Host, setopenPrompt }) 
   const [MySquares, setMySquares] = useState(0);
   const [OpponentSquares, setOpponentSquares] = useState(0);
 
-  const gridSize = 10;
+  const gridSize = 6;
   const dotSpacing = 100;
 
   useEffect(() => {
@@ -51,10 +51,10 @@ export default function DotGrid({ setMain, main, RoomID, Host, setopenPrompt }) 
       console.log("hi");
     })
 
-    socket.on("PlayerLeft", () => {
-      disconnectSocket();
-      setMain("home");
-    })
+    // socket.on("playerLeft", (username) => {
+    //   alert(`${username} has left the game! You Won!! 🎉`);
+    //   setMain("home");
+    // })
 
     socket.on("oppositeMove", (updateLines, turn) => {
       console.log("Update lines received:- ", updateLines);
@@ -63,6 +63,20 @@ export default function DotGrid({ setMain, main, RoomID, Host, setopenPrompt }) 
       console.log("Lines and turn updated:- ", updateLines, !turn);
     })
   }, []);
+
+  useEffect(() => {
+    const handlePlayerLeft = (username) => {
+      console.log("playerLeft event received", username);
+      alert(`${username} has left the game! You Won!! 🎉`);
+      setMain("home");
+    };
+
+    socket.on("playerLeft", handlePlayerLeft);
+
+    return () => {
+      socket.off("playerLeft", handlePlayerLeft);
+    };
+  }, [socket, setMain]);
 
   useEffect(() => {
     drawGrid(dots, lines, CompletedSquares);
@@ -276,8 +290,7 @@ export default function DotGrid({ setMain, main, RoomID, Host, setopenPrompt }) 
   };
 
   const handleButton = () => {
-    socket.emit("leave", RoomID);
-    disconnectSocket();
+    socket.emit("leave", RoomID, Name);
     setMain("home")
   }
 
@@ -296,15 +309,19 @@ export default function DotGrid({ setMain, main, RoomID, Host, setopenPrompt }) 
         <div className="game-status">
           {Turn ? "🎯 Your Turn" : "⏳ Opponent's Turn"}
         </div>
-        <button
-          onClick={handleButton}
-          className="leave-button"
-        >
+        <button onClick={handleButton} className="leave-button">
           Leave the Game
         </button>
+        {/* New scoreboard container that uses names from the RoomMembers list */}
+        <div className="scoreboard">
+          <div className="score player-one">
+            {`${Name}: ${MySquares}`}
+          </div>
+          <div className="score player-two">
+            {RoomMembers && RoomMembers[1] != Name ? `${RoomMembers[1]}: ${OpponentSquares}` : `${RoomMembers[0]}: ${OpponentSquares}`}
+          </div>
+        </div>
       </div>
     </Fragment>
-
-
   );
 }

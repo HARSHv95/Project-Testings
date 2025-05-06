@@ -46,3 +46,33 @@
   background: #c0392b;
   transform: scale(1.05);
 }
+
+/* Place these rules in grid.css (or your CSS file managing grid styling) */
+.scoreboard {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  margin-top: 1rem;
+}
+
+.score {
+  flex: 1;
+  padding: 1rem;
+  margin: 0 1rem;
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1.2rem;
+  background: #ecf0f1;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.player-one {
+  background: #a9dfbf; /* light green tone */
+}
+
+.player-two {
+  background: #f5b7b1; /* light red/pink tone */
+}

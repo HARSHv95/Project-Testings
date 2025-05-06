@@ -4,7 +4,6 @@ import { nanoid } from "nanoid";
 import { SocketContext } from "./socketConnection";
 import ToggleSwitch from "./ToggleSwitch";
 import "./prompt.css";
-import { Socket } from "socket.io-client";
 
 
 export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomID, setRoomID, RoomSize, setRoomSize, RoomState, setRoomState, Host, setHost, Name, RoomMembers, setRoomMembers }) {
@@ -22,6 +21,19 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
             });
         }
     }, [socket]);
+
+    useEffect(() => {
+        socket?.on("RoomClosed", () => {
+            console.log("Room closed by host");
+            setRoomID("");
+            setRoomSize(0);
+            setRoomState("join");
+            setRoomMembers([]);
+            setHost(false);
+            setOpenRoom(false);
+            disconnectSocket();
+        })
+    },[])
 
 
 
@@ -114,6 +126,7 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
                     setRoomID("");
                 });
                 SocketConnection.on("RoomClosed", () => {
+                    console.log("Room closed by host");
                     setRoomID("");
                     setRoomSize(0);
                     setRoomState("join");
@@ -138,6 +151,7 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
                 console.log("Socket disconnected");
                 socket.emit("HostLeft", RoomID);
                 socket.on("RoomClosed", () => {
+                    console.log("Room closed by host");
                     setRoomID("");
                     setRoomSize(0);
                     setRoomState("join");
@@ -153,7 +167,6 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
             if (socket) {
                 console.log("Socket disconnected");
                 socket.emit("PlayerLeft", RoomID, Name);
-                disconnectSocket();
             }
             setEnterId("");
             setRoomID(null);
@@ -164,9 +177,13 @@ export default function RenderPrompt({ setMain, setopenPrompt, openPrompt, RoomI
     const handleClose = () => {
         if(socket){
             if(!Host){
+                console.log("Player left the room");
                 socket.emit("PlayerLeft", RoomID, Name);
             }
-            disconnectSocket();
+            else{
+                console.log("Host left the room");
+                socket.emit("HostLeft", RoomID);
+            }
         }
         setRoomID("");
         setRoomSize(0);

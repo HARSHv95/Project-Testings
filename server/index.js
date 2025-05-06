@@ -11,7 +11,7 @@ app.use(express.json());
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: "*",
         methods: ["GET", "POST"],
     }
 });
@@ -104,10 +104,10 @@ io.on("connection", (socket) => {
         })
     })
 
-    socket.on("leave", (key) => {
+    socket.on("leave", (key, username) => {
         users[key]?.id.forEach((user) => {
             if (socket?.id != user) {
-                io.to(user).emit("PlayerLeft");
+                io.to(user).emit("playerLeft", username);
             }
         })
         delete users[key];
@@ -194,6 +194,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("PlayerLeft", (ID, username) => {
+        console.log("Player Left", ID, username);
         if (users[ID]) {
             const arr = users[ID].id.filter((user) => user !== socket?.id);
             const arr1 = users[ID].members.filter((user) => user !== username);
@@ -241,6 +242,6 @@ setInterval(() => {
     });
 }, 60000);
 
-server.listen(3000, () => {
+server.listen(3000, "0.0.0.0", () => {
     console.log("Server running on port 3000");
 })

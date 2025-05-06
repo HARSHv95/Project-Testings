@@ -24,7 +24,7 @@ function App() {
     <div>
       {main === "home" 
         ? <HomePage setopenPrompt={setopenPrompt} RoomID={RoomID} setRoomID={setRoomID} setMain={setMain} setRoomSize={setRoomSize} setRoomState={setRoomState} Name={Name} setRoomMembers={setRoomMembers}/>
-        : <DotGrid setMain={setMain} main={main} RoomID={RoomID} Host={Host} setopenPrompt={setopenPrompt} RoomMembers={RoomMembers}/> 
+        : <DotGrid setMain={setMain} main={main} RoomID={RoomID} Host={Host} setopenPrompt={setopenPrompt} RoomMembers={RoomMembers} Name={Name}/> 
       }
       <RenderPrompt setMain={setMain} setopenPrompt={setopenPrompt} openPrompt={openPrompt} RoomID={RoomID} setRoomID={setRoomID} RoomSize={RoomSize} setRoomSize={setRoomSize} RoomState={RoomState} setRoomState={setRoomState} Host={Host} setHost={setHost} Name={Name} RoomMembers={RoomMembers} setRoomMembers={setRoomMembers}/>
       <RenderNamePrompt Name={Name} setName={setName} openNamePrompt={openNamePrompt} setOpenNamePrompt={setopenNamePrompt1}/>

@@ -8,7 +8,7 @@ export const SocketProvider = ({children})=>{
 
     const connectSocket = ()=>{
         if(!socket){
-            const newSocket = io("http://localhost:3000");
+            const newSocket = io("http://10.196.34.48:3000");
             setsocket(newSocket);
             return newSocket;
         }
